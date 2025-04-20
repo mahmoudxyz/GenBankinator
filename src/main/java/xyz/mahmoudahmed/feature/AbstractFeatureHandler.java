@@ -24,8 +24,13 @@ public abstract class AbstractFeatureHandler implements FeatureHandler {
 
     @Override
     public List<Annotation> createAdditionalFeatures(Annotation feature) {
+
+        if (Objects.equals(feature.getType(), "misc_feature")) {
+            return Collections.emptyList();
+        }
         // By default, create a gene feature for this feature
         if (!feature.getType().equals("gene")) {
+            System.out.println();
             Annotation geneFeature = createGeneFeature(feature);
             return Collections.singletonList(geneFeature);
         }

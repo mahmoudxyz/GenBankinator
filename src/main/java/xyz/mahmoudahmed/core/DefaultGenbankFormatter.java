@@ -195,11 +195,18 @@ public class DefaultGenbankFormatter implements GenbankFormatter {
 
         // Write DBLINK lines if present
         if (headerInfo != null && headerInfo.getDbLinks() != null && !headerInfo.getDbLinks().isEmpty()) {
+            boolean first = true;
             for (Map.Entry<String, String> link : headerInfo.getDbLinks().entrySet()) {
-                writer.write("DBLINK      " + link.getKey() + ": " + link.getValue());
+                if (first) {
+                    writer.write("DBLINK      " + link.getKey() + ": " + link.getValue());
+                    first = false;
+                } else {
+                    writer.write("            " + link.getKey() + ": " + link.getValue()); // 12 spaces
+                }
                 writer.newLine();
             }
         }
+
 
         // Write KEYWORDS line
         String keywords = ".";

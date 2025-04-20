@@ -6,8 +6,8 @@ import xyz.mahmoudahmed.model.AnnotationData;
 import xyz.mahmoudahmed.exception.ParsingException;
 import xyz.mahmoudahmed.feature.FeatureHandler;
 import xyz.mahmoudahmed.feature.FeatureHandlerRegistry;
-import xyz.mahmoudahmed.translator.Translator;
-import xyz.mahmoudahmed.translator.TranslatorFactory;
+import xyz.mahmoudahmed.model.ConversionOptions;
+import xyz.mahmoudahmed.translator.*;
 
 import java.io.*;
 import java.util.*;
@@ -25,8 +25,20 @@ public class FastaAnnotationParser implements AnnotationParser {
             List.of("FASTA", "FA", "FNA", "FAA", "FFN");
 
     private static final Pattern HEADER_PATTERN = Pattern.compile(
-            "([^;]+);\\s*([0-9]+-[0-9]+);\\s*([+\\-]);\\s*([^\\(]+)(?:\\(([^\\)]+)\\))?.*"
+            "([^;]+);\\s*([0-9]+-[0-9]+);\\s*([+\\-]);\\s*([^(]+)(?:\\(([^)]+)\\))?.*"
     );
+
+    private ConversionOptions conversionOptions;
+
+
+    /**
+     * Sets the conversion options for this parser
+     *
+     * @param options The conversion options to use
+     */
+    public void setConversionOptions(ConversionOptions options) {
+        this.conversionOptions = options;
+    }
 
     /**
      * Immutable record to store sequence data
@@ -75,8 +87,8 @@ public class FastaAnnotationParser implements AnnotationParser {
     /**
      * Pure function to extract sequence data from reader
      */
-    private List<SequenceData> extractSequenceData(BufferedReader reader) throws IOException {
-        List<String> lines = reader.lines().collect(Collectors.toList());
+    private List<SequenceData> extractSequenceData(BufferedReader reader)  {
+        List<String> lines = reader.lines().toList();
 
         // Group lines by feature
         List<List<String>> groupedLines = new ArrayList<>();
@@ -139,6 +151,8 @@ public class FastaAnnotationParser implements AnnotationParser {
                 ));
     }
 
+
+
     /**
      * Pure function to create an annotation from sequence data
      */
@@ -151,8 +165,8 @@ public class FastaAnnotationParser implements AnnotationParser {
         // Determine the correct feature type
         String featureType = handler.getFeatureType();
 
-        // Create translator for protein translations
-        Translator translator = TranslatorFactory.createInvertebrateMitochondrialTranslator();
+        // Create translator based on conversion options
+        Translator translator = createTranslator();
 
         // Build qualifiers
         Map<String, List<String>> qualifiers = new HashMap<>();
@@ -160,6 +174,17 @@ public class FastaAnnotationParser implements AnnotationParser {
 
         // Add feature-specific qualifiers
         qualifiers.putAll(handler.buildQualifiers(header, data.sequence(), translator));
+
+        // Add transl_table qualifier for CDS features
+        if (featureType.equals("CDS") && translator instanceof StandardTranslator) {
+            GeneticCode geneticCode = ((StandardTranslator) translator).getGeneticCode();
+            if (geneticCode instanceof AbstractGeneticCode) {
+                GeneticCodeTable table = ((AbstractGeneticCode) geneticCode).getTable();
+                qualifiers.put("transl_table", Collections.singletonList(
+                        String.valueOf(table.getTableNumber())
+                ));
+            }
+        }
 
         return Annotation.builder()
                 .type(featureType)
@@ -170,6 +195,20 @@ public class FastaAnnotationParser implements AnnotationParser {
                 .featureId(qualifiers.get("ID").get(0))
                 .qualifiers(qualifiers)
                 .build();
+    }
+    /**
+     * Creates a translator based on the conversion options
+     */
+    private Translator createTranslator() {
+        if (conversionOptions != null &&
+                conversionOptions.getTranslationOptions() != null) {
+
+            return TranslatorFactory.createTranslator(
+                    conversionOptions.getTranslationOptions().getGeneticCodeTable());
+        } else {
+            // Default to Invertebrate Mitochondrial for backward compatibility
+            return TranslatorFactory.createInvertebrateMitochondrialTranslator();
+        }
     }
 
     /**
@@ -190,7 +229,7 @@ public class FastaAnnotationParser implements AnnotationParser {
         // Sort features by position
         List<Annotation> sortedFeatures = features.stream()
                 .sorted(Comparator.comparingInt(Annotation::getStart))
-                .collect(Collectors.toList());
+                .toList();
 
         // Process each feature and add gene features as needed
         List<Annotation> result = new ArrayList<>();
@@ -278,16 +317,19 @@ public class FastaAnnotationParser implements AnnotationParser {
         }
 
         // Handle cytochrome b
-        if (lower.equals("cob") || lower.equals("cytb")) {
-            return "CYTB";
-        }
+        switch (lower) {
+            case "cob", "cytb" -> {
+                return "CYTB";
+            }
 
-        // Handle ribosomal RNA genes
-        if (lower.equals("rrns")) {
-            return "rrn12";
-        }
-        if (lower.equals("rrnl")) {
-            return "rrn16";
+
+            // Handle ribosomal RNA genes
+            case "rrns" -> {
+                return "rrn12";
+            }
+            case "rrnl" -> {
+                return "rrn16";
+            }
         }
 
         // Handle tRNA genes with duplicates
@@ -295,7 +337,7 @@ public class FastaAnnotationParser implements AnnotationParser {
             return lower; // Keep tRNA original name format
         }
 
-        // Return input with standardized case if no match
+        // Return input with a standardized case if no match
         return featureType;
     }
 

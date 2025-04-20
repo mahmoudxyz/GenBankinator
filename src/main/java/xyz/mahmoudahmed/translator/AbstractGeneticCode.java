@@ -13,18 +13,27 @@ public abstract class AbstractGeneticCode implements GeneticCode {
     protected final Set<String> startCodons = new HashSet<>();
     protected final Set<String> stopCodons = new HashSet<>();
     protected final String name;
+    protected final GeneticCodeTable table;
 
-    public AbstractGeneticCode(String name) {
+    public AbstractGeneticCode(String name, GeneticCodeTable table) {
         this.name = name;
+        this.table = table;
         initializeCodonTable();
         initializeStartCodons();
         initializeStopCodons();
     }
 
+    /**
+     * Get the genetic code table associated with this code.
+     *
+     * @return The genetic code table
+     */
+    public GeneticCodeTable getTable() {
+        return table;
+    }
+
     protected abstract void initializeCodonTable();
-
     protected abstract void initializeStartCodons();
-
     protected abstract void initializeStopCodons();
 
     @Override

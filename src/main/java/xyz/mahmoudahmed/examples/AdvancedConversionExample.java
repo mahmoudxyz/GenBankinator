@@ -40,12 +40,7 @@ public class AdvancedConversionExample {
                     .annotationFormat("GFF")
                     // Configure translation options
                     .translationOptions(TranslationOptions.builder()
-                            .autoTranslate(true)
                             .geneticCode("vertebrate_mitochondrial")
-                            .forceTranslateFeatureTypes(List.of("exon"))
-                            .skipTranslateFeatureTypes(List.of("pseudogene"))
-                            .includeTranslTableQualifier(true)
-                            .includeCodonStartQualifier(true)
                             .build())
                     // Configure feature formatting options
                     .featureFormattingOptions(FeatureFormattingOptions.builder()

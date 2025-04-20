@@ -15,8 +15,8 @@ import java.util.*;
 public class BasicConversionExample {
     public static void main(String[] args) {
         // Define input file paths
-        File sequenceFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/2.fasta");
-        File annotationFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/2_ann.fasta");
+        File sequenceFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/3.fasta");
+        File annotationFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/3_ann.fasta");
         try {
             // Run different examples
             basicConversion(sequenceFile, annotationFile);
@@ -47,10 +47,10 @@ public class BasicConversionExample {
 
         // Define basic conversion options
         ConversionOptions options = ConversionOptions.builder()
-                .organism("Stephanocoenia intersepta")
+                .organism("Emerita talpoida")
                 .moleculeType("DNA")
                 .topology("circular")
-                .division("SINT")
+                .division("INV")
                 .annotationFormat("FASTA")
                 .build();
 
@@ -87,37 +87,70 @@ public class BasicConversionExample {
         List<ReferenceInfo> references = new ArrayList<>();
         ReferenceInfo reference = ReferenceInfo.builder()
                 .number(1)
-                .authors(Arrays.asList("Doe, J.", "Smith, A.", "Johnson, B."))
-                .title("Complete mitochondrial genome of Centrophorus granulosus")
-                .journal("Journal of Molecular Biology, 45(3): 123-145")
-                .pubStatus("Unpublished")
+                .authors(Arrays.asList(
+                        "Colin, A.",
+                        "Galvan-Tirado, C.",
+                        "Carreon-Palau, L.",
+                        "Bracken-Grissom, H.D.",
+                        "Baeza, J.A."))
+                .title("Mitochondrial genomes of the land hermit crab Coenobita clypeatus (Anomura: Paguroidea) and the mole crab Emerita talpoida (Anomura: Hippoidea) with insights into phylogenetic relationships in the Anomura (Crustacea: Decapoda)")
+                .journal("Gene 849, 146896 (2022)")
+                .pubStatus("Published")
                 .build();
         references.add(reference);
 
+
         // Create a HeaderInfo object
         HeaderInfo headerInfo = HeaderInfo.builder()
-                .definition("Centrophorus granulosus voucher XXXX mitochondrion, complete genome")
-                .keywords("mitochondrion; complete genome")
-                .taxonomy(Arrays.asList("Eukaryota", "Metazoa", "Chordata", "Craniata", "Vertebrata",
-                        "Chondrichthyes", "Elasmobranchii", "Squaliformes", "Centrophoridae", "Centrophorus"))
-                .dbLinks(Map.of("BioProject", "PRJNA123456", "BioSample", "SAMN12345678"))
-                .references(references)
-                .comment("This sequence was generated for demonstration purposes.")
-                .assemblyData(Map.of(
-                        "Assembly Method", "getOrganelle v1.7.6.1",
-                        "Sequencing Technology", "Illumina",
-                        "Coverage", "100x"
+                .definition("Emerita talpoida mitochondrion, complete genome.")
+                .accessionNumber("NC_067557")
+                .version("NC_067557.1")
+                .keywords("RefSeq.")
+                .taxonomy(Arrays.asList(
+                        "Eukaryota",
+                        "Metazoa",
+                        "Ecdysozoa",
+                        "Arthropoda",
+                        "Crustacea",
+                        "Multicrustacea",
+                        "Malacostraca",
+                        "Eumalacostraca",
+                        "Eucarida",
+                        "Decapoda",
+                        "Pleocyemata",
+                        "Anomura",
+                        "Hippoidea",
+                        "Hippidae",
+                        "Emerita"
                 ))
+                .dbLinks(Map.of("BioProject", "PRJNA927338"))
+                .references(references)
+                .comment("PROVISIONAL REFSEQ: This record has not yet been subject to final NCBI review. The reference sequence is identical to ON164669.")
+                .assemblyData(Map.of(
+                        "Assembly Method", "NOVOPlasty v. v. 1.2.3",
+                        "Sequencing Technology", "Illumina"))
                 .build();
+
+
+        // Define translation options with specific genetic code
+        TranslationOptions translationOptions = TranslationOptions.builder()
+                .translTableNumber(5)
+                .translateCDS(true)
+                .includeStopCodon(false)
+                .build();
+
+
+
 
         // Define conversion options with HeaderInfo
         ConversionOptions options = ConversionOptions.builder()
-                .organism("Centrophorus granulosus")
+                .organism("Emerita talpoida")
                 .moleculeType("DNA")
                 .topology("circular")
-                .division("VRT")
+                .division("INV")
                 .annotationFormat("FASTA")
-                .headerInfo(headerInfo)  // Set the HeaderInfo object
+                .headerInfo(headerInfo)
+                .translationOptions(translationOptions)
                 .build();
 
         // Convert to GenBank format

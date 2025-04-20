@@ -3,6 +3,7 @@ package xyz.mahmoudahmed.core;
 import xyz.mahmoudahmed.api.*;
 import xyz.mahmoudahmed.exception.ValidationException;
 import xyz.mahmoudahmed.model.*;
+import xyz.mahmoudahmed.parsers.FastaAnnotationParser;
 import xyz.mahmoudahmed.util.FileSequenceStreamProvider;
 import xyz.mahmoudahmed.util.SequenceStreamProvider;
 
@@ -36,7 +37,12 @@ public class DefaultGenbankConverter implements GenbankConverter {
             throw new ValidationException("Validation failed: " + validationResult.getSummary());
         }
 
-        // Determine processing mode based on file size and options
+        // Pass the conversion options to the annotation parser if it supports it
+        if (annotationParser instanceof FastaAnnotationParser) {
+            ((FastaAnnotationParser) annotationParser).setConversionOptions(options);
+        }
+
+        // Rest of the method remains the same...
         if (this.options.isMemoryEfficient() || sequenceFile.length() > this.options.getMemoryThreshold()) {
             return convertLargeFiles(sequenceFile, annotationFile, options);
         } else {

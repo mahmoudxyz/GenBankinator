@@ -185,7 +185,6 @@ class ModelClassesTest {
     void testConversionOptionsBuilder() {
         // Create sub-option objects
         TranslationOptions translationOptions = TranslationOptions.builder()
-                .autoTranslate(true)
                 .geneticCode("vertebrate_mitochondrial")
                 .build();
 

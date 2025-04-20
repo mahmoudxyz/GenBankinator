@@ -1,5 +1,7 @@
 package xyz.mahmoudahmed.translator;
 
+import xyz.mahmoudahmed.model.TranslationOptions;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,11 +11,37 @@ import java.util.List;
 public class StandardTranslator implements Translator {
     private final SequenceHandler sequenceHandler;
     private final GeneticCode geneticCode;
+    private final TranslationOptions options;
 
     public StandardTranslator(SequenceHandler sequenceHandler, GeneticCode geneticCode) {
+        this(sequenceHandler, geneticCode, null);
+    }
+
+    public StandardTranslator(SequenceHandler sequenceHandler, GeneticCode geneticCode, TranslationOptions options) {
         this.sequenceHandler = sequenceHandler;
         this.geneticCode = geneticCode;
+        this.options = options;
     }
+
+
+    /**
+     * Get the genetic code used by this translator.
+     *
+     * @return The genetic code
+     */
+    public GeneticCode getGeneticCode() {
+        return geneticCode;
+    }
+
+    /**
+     * Get the translation options.
+     *
+     * @return The translation options or null if not set
+     */
+    public TranslationOptions getOptions() {
+        return options;
+    }
+
 
     @Override
     public String translate(String sequence, boolean isRNA) {
@@ -24,12 +52,34 @@ public class StandardTranslator implements Translator {
         // Split into codons
         List<String> codons = sequenceHandler.splitIntoCodons(rnaSequence);
 
+        // Check if we need to handle internal stop codons
+        boolean allowInternalStopCodons = false;
+        if (geneticCode instanceof AbstractGeneticCode) {
+            AbstractGeneticCode abstractCode = (AbstractGeneticCode) geneticCode;
+            // Allow internal stop codons for marine mitochondrial codes or if specified in options
+            allowInternalStopCodons = abstractCode.getTable() == GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL ||
+                    (options != null && options.isAllowInternalStopCodons());
+        }
+
+        // Find the last non-stop codon
+        int lastNonStopCodonIndex = -1;
+        for (int i = codons.size() - 1; i >= 0; i--) {
+            String codon = codons.get(i);
+            if (codon.length() == 3 && !geneticCode.isStopCodon(codon)) {
+                lastNonStopCodonIndex = i;
+                break;
+            }
+        }
+
         // Translate
         StringBuilder protein = new StringBuilder();
         boolean isFirstCodon = true;
 
-        for (String codon : codons) {
-            if (codon.length() == 3) {  // Ensure complete codon
+        for (int i = 0; i <= lastNonStopCodonIndex; i++) {
+            // Only translate up to the last non-stop codon
+            // This handles the case where there might be multiple stop codons at the end
+            String codon = codons.get(i);
+            if (codon.length() == 3) {
                 char aminoAcid;
 
                 // Special handling for start codons
@@ -39,11 +89,19 @@ public class StandardTranslator implements Translator {
                     aminoAcid = geneticCode.translate(codon);
                 }
 
+                // Handle stop codons (any stop codons here must be internal)
                 if (aminoAcid == '*') {
-                    break;  // Stop at termination codon
+                    if (allowInternalStopCodons) {
+                        // For marine mitochondrial genomes or when allowed: replace with dash
+                        protein.append('-');
+                    } else {
+                        // Standard NCBI behavior: stop at first stop codon
+                        break;
+                    }
+                } else {
+                    protein.append(aminoAcid);
                 }
 
-                protein.append(aminoAcid);
                 isFirstCodon = false;
             }
         }

@@ -5,7 +5,7 @@ package xyz.mahmoudahmed.translator;
  */
 public class InvertebrateMitochondrialCode extends AbstractGeneticCode {
     public InvertebrateMitochondrialCode() {
-        super("Invertebrate Mitochondrial Code");
+        super("Invertebrate Mitochondrial Code", GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL);
     }
 
     @Override

@@ -34,7 +34,7 @@ class DefaultAnnotationParserTest {
         assertTrue(parser.supportsFormat("GFF3"));
         assertTrue(parser.supportsFormat("GTF"));
         assertTrue(parser.supportsFormat("BED"));
-        assertFalse(parser.supportsFormat("FASTA"));
+        assertTrue(parser.supportsFormat("FASTA"));
         assertFalse(parser.supportsFormat("GENBANK"));
     }
 

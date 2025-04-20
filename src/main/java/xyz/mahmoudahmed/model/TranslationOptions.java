@@ -1,119 +1,172 @@
 package xyz.mahmoudahmed.model;
 
-import java.util.List;
+import xyz.mahmoudahmed.translator.GeneticCodeTable;
 
 /**
- * Options for controlling translation of sequences.
+ * Options for translation operations.
  */
-public interface TranslationOptions {
-    /**
-     * Check if auto-translation is enabled.
-     *
-     * @return true if auto-translation is enabled
-     */
-    boolean isAutoTranslate();
+public class TranslationOptions {
+    private final GeneticCodeTable geneticCodeTable;
+    private final boolean includeStopCodon;
+    private final boolean translateCDS;
+    private final boolean allowInternalStopCodons;
+
+    private TranslationOptions(Builder builder) {
+        this.geneticCodeTable = builder.geneticCodeTable != null ?
+                builder.geneticCodeTable :
+                GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+        this.includeStopCodon = builder.includeStopCodon;
+        this.translateCDS = builder.translateCDS;
+        this.allowInternalStopCodons = builder.allowInternalStopCodons;
+    }
+
 
     /**
-     * Get the genetic code to use for translation.
+     * Get the genetic code table to use it for translation.
      *
-     * @return The genetic code
+     * @return The genetic code table (never null)
      */
-    String getGeneticCode();
+    public GeneticCodeTable getGeneticCodeTable() {
+        return geneticCodeTable != null ?
+                geneticCodeTable :
+                GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+    }
 
     /**
-     * Get feature types to force translation for.
+     * Get the NCBI translation table number.
      *
-     * @return List of feature types
+     * @return The NCBI translation table number
      */
-    List<String> getForceTranslateFeatureTypes();
+    public int getTranslTableNumber() {
+        return geneticCodeTable != null ?
+                geneticCodeTable.getTableNumber() :
+                GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL.getTableNumber();
+    }
 
     /**
-     * Get feature types to skip translation for.
+     * Check if stop codons should be included in translation.
      *
-     * @return List of feature types
+     * @return true if stop codons should be included
      */
-    List<String> getSkipTranslateFeatureTypes();
+    public boolean isIncludeStopCodon() {
+        return includeStopCodon;
+    }
 
     /**
-     * Check if transl_table qualifier should be included.
+     * Check if CDS features should be automatically translated.
      *
-     * @return true if transl_table qualifier should be included
+     * @return true if CDS features should be translated
      */
-    boolean isIncludeTranslTableQualifier();
-
-    /**
-     * Check if codon_start qualifier should be included.
-     *
-     * @return true if codon_start qualifier should be included
-     */
-    boolean isIncludeCodonStartQualifier();
+    public boolean isTranslateCDS() {
+        return translateCDS;
+    }
 
     /**
      * Create a builder for TranslationOptions.
      *
      * @return A new builder
      */
-    static Builder builder() {
-        return new DefaultTranslationOptions.Builder();
+    public static Builder builder() {
+        return new Builder();
     }
+
+    /**
+     * Check if internal stop codons should be represented as dashes.
+     *
+     * @return true if internal stop codons should be represented as dashes
+     */
+    public boolean isAllowInternalStopCodons() {
+        return allowInternalStopCodons;
+    }
+
 
     /**
      * Builder for TranslationOptions.
      */
-    interface Builder {
-        /**
-         * Set auto-translation.
-         *
-         * @param autoTranslate true to enable auto-translation
-         * @return This builder
-         */
-        Builder autoTranslate(boolean autoTranslate);
+    public static class Builder {
+        private GeneticCodeTable geneticCodeTable = GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+        private boolean includeStopCodon = false;
+        private boolean translateCDS = true;
+        private boolean allowInternalStopCodons = false;
+
 
         /**
-         * Set the genetic code.
+         * Set whether internal stop codons should be represented as dashes.
+         * Useful for certain marine mitochondrial genomes with known internal stops.
          *
-         * @param geneticCode The genetic code
+         * @param allowInternalStopCodons true to represent internal stops as dashes
          * @return This builder
          */
-        Builder geneticCode(String geneticCode);
+        public Builder allowInternalStopCodons(boolean allowInternalStopCodons) {
+            this.allowInternalStopCodons = allowInternalStopCodons;
+            return this;
+        }
+
+
 
         /**
-         * Set feature types to force translation for.
+         * Set the genetic code table to use for translation.
          *
-         * @param forceTranslateFeatureTypes List of feature types
+         * @param geneticCodeTable The genetic code table
          * @return This builder
          */
-        Builder forceTranslateFeatureTypes(List<String> forceTranslateFeatureTypes);
+        public Builder geneticCodeTable(GeneticCodeTable geneticCodeTable) {
+            this.geneticCodeTable = geneticCodeTable;
+            return this;
+        }
 
         /**
-         * Set feature types to skip translation for.
+         * Set the genetic code table by its NCBI table number.
          *
-         * @param skipTranslateFeatureTypes List of feature types
+         * @param tableNumber The NCBI translation table number
          * @return This builder
          */
-        Builder skipTranslateFeatureTypes(List<String> skipTranslateFeatureTypes);
+        public Builder translTableNumber(int tableNumber) {
+            this.geneticCodeTable = GeneticCodeTable.getByTableNumber(tableNumber);
+            return this;
+        }
 
         /**
-         * Set whether to include transl_table qualifier.
+         * Set the genetic code by name or number as a string.
+         * This can be the enum name, description, or table number.
          *
-         * @param includeTranslTableQualifier true to include transl_table qualifier
+         * @param nameOrNumber The name or number of the genetic code table
          * @return This builder
          */
-        Builder includeTranslTableQualifier(boolean includeTranslTableQualifier);
+        public Builder geneticCode(String nameOrNumber) {
+            this.geneticCodeTable = GeneticCodeTable.getByNameOrNumber(nameOrNumber);
+            return this;
+        }
 
         /**
-         * Set whether to include codon_start qualifier.
+         * Set whether to include stop codons in translation.
          *
-         * @param includeCodonStartQualifier true to include codon_start qualifier
+         * @param includeStopCodon true to include stop codons
          * @return This builder
          */
-        Builder includeCodonStartQualifier(boolean includeCodonStartQualifier);
+        public Builder includeStopCodon(boolean includeStopCodon) {
+            this.includeStopCodon = includeStopCodon;
+            return this;
+        }
+
+        /**
+         * Set whether to automatically translate CDS features.
+         *
+         * @param translateCDS true to translate CDS features
+         * @return This builder
+         */
+        public Builder translateCDS(boolean translateCDS) {
+            this.translateCDS = translateCDS;
+            return this;
+        }
 
         /**
          * Build the TranslationOptions.
          *
          * @return The built TranslationOptions
          */
-        TranslationOptions build();
+        public TranslationOptions build() {
+            return new TranslationOptions(this);
+        }
     }
 }

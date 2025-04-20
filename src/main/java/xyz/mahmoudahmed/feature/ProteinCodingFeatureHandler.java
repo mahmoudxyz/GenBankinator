@@ -1,6 +1,7 @@
 package xyz.mahmoudahmed.feature;
 
 import xyz.mahmoudahmed.parsers.FastaHeaderInfo;
+import xyz.mahmoudahmed.parsers.SequenceProvider;
 import xyz.mahmoudahmed.translator.Translator;
 
 import java.util.*;
@@ -94,6 +95,7 @@ public class ProteinCodingFeatureHandler extends AbstractFeatureHandler {
     public Map<String, List<String>> buildQualifiers(FastaHeaderInfo header, String sequence, Translator translator) {
         Map<String, List<String>> qualifiers = super.buildQualifiers(header, sequence, translator);
 
+        System.out.println();
         // Add standard protein coding qualifiers
         qualifiers.put("codon_start", Collections.singletonList("1"));
         qualifiers.put("transl_table", Collections.singletonList("5")); // Could be parameterized
@@ -149,13 +151,33 @@ public class ProteinCodingFeatureHandler extends AbstractFeatureHandler {
         qualifiers.put("protein_id", Collections.singletonList(""));
 
         // Generate protein translation
-        if (translator != null && sequence != null && !sequence.isEmpty()) {
-            String translation = translator.translate(sequence, false); // false = input is DNA
+        if (translator != null) {
+            // Try to get sequence from the SequenceProvider first
+            String sequenceToTranslate = SequenceProvider.getRegion(
+                    header.seqId(),
+                    header.start(),
+                    header.end()
+            );
 
-            // Format translation in chunks of 60 characters
-            String formattedTranslation = formatTranslation(translation);
-            qualifiers.put("translation", Collections.singletonList(formattedTranslation));
+            // Fall back to annotation sequence if region not found
+            if (sequenceToTranslate == null || sequenceToTranslate.isEmpty()) {
+                sequenceToTranslate = sequence; // Use the sequence from annotation
+
+                // Debug info - useful for troubleshooting
+                System.out.println("WARNING: Using annotation sequence for " +
+                        header.featureType() + " at " +
+                        header.start() + "-" + header.end() +
+                        " instead of full genomic sequence");
+            }
+
+            // Only translate if we have a sequence
+            if (sequenceToTranslate != null && !sequenceToTranslate.isEmpty()) {
+                String translation = translator.translate(sequenceToTranslate, false);
+                String formattedTranslation = formatTranslation(translation);
+                qualifiers.put("translation", Collections.singletonList(formattedTranslation));
+            }
         }
+
 
         return qualifiers;
     }
