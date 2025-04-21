@@ -4,9 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
-import xyz.mahmoudahmed.api.*;
+import xyz.mahmoudahmed.converter.DefaultGenbankConverter;
 import xyz.mahmoudahmed.exception.ValidationException;
+import xyz.mahmoudahmed.formatters.GenbankFormatter;
 import xyz.mahmoudahmed.model.*;
+import xyz.mahmoudahmed.parsers.AnnotationParser;
+import xyz.mahmoudahmed.parsers.SequenceParser;
+import xyz.mahmoudahmed.validators.GenbankValidator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;

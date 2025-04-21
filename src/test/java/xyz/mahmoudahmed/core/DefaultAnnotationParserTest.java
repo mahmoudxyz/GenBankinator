@@ -6,12 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import xyz.mahmoudahmed.model.Annotation;
 import xyz.mahmoudahmed.model.AnnotationData;
+import xyz.mahmoudahmed.parsers.DefaultAnnotationParser;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,6 +64,7 @@ class DefaultAnnotationParserTest {
         assertEquals(999, geneAnnotation.getStart()); // 0-based
         assertEquals(2000, geneAnnotation.getEnd());
         assertEquals(1, geneAnnotation.getStrand());
+        System.out.println();
         assertEquals("gene1", geneAnnotation.getQualifiers().get("ID").get(0));
 
         // Verify CDS annotation

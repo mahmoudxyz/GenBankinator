@@ -6,9 +6,8 @@ import org.junit.jupiter.api.io.TempDir;
 import xyz.mahmoudahmed.exception.InvalidFileFormatException;
 import xyz.mahmoudahmed.model.Sequence;
 import xyz.mahmoudahmed.model.SequenceData;
+import xyz.mahmoudahmed.parsers.DefaultSequenceParser;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
