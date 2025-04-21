@@ -3,33 +3,45 @@ package xyz.mahmoudahmed.model;
 import xyz.mahmoudahmed.translator.GeneticCodeTable;
 
 /**
- * Options for translation operations.
+ * Options for translation operations with proper precedence handling.
  */
 public class TranslationOptions {
-    private final GeneticCodeTable geneticCodeTable;
+    private final Integer translTableNumber;
+    private final String geneticCode;
+    private final GeneticCodeTable explicitCodeTable;
     private final boolean includeStopCodon;
     private final boolean translateCDS;
     private final boolean allowInternalStopCodons;
 
     private TranslationOptions(Builder builder) {
-        this.geneticCodeTable = builder.geneticCodeTable != null ?
-                builder.geneticCodeTable :
-                GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+        this.translTableNumber = builder.translTableNumber;
+        this.geneticCode = builder.geneticCode;
+        this.explicitCodeTable = builder.explicitCodeTable;
         this.includeStopCodon = builder.includeStopCodon;
         this.translateCDS = builder.translateCDS;
         this.allowInternalStopCodons = builder.allowInternalStopCodons;
     }
 
-
     /**
-     * Get the genetic code table to use it for translation.
+     * Get the genetic code table to use for translation, applying precedence:
+     * 1. translTableNumber (if specified)
+     * 2. geneticCode (if specified)
+     * 3. explicitCodeTable (if specified)
+     * 4. Default to Invertebrate Mitochondrial
      *
      * @return The genetic code table (never null)
      */
     public GeneticCodeTable getGeneticCodeTable() {
-        return geneticCodeTable != null ?
-                geneticCodeTable :
-                GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+        // Apply precedence rules
+        if (translTableNumber != null) {
+            return GeneticCodeTable.getByTableNumber(translTableNumber);
+        } else if (geneticCode != null && !geneticCode.isEmpty()) {
+            return GeneticCodeTable.getByNameOrNumber(geneticCode);
+        } else if (explicitCodeTable != null) {
+            return explicitCodeTable;
+        } else {
+            return GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+        }
     }
 
     /**
@@ -37,10 +49,17 @@ public class TranslationOptions {
      *
      * @return The NCBI translation table number
      */
-    public int getTranslTableNumber() {
-        return geneticCodeTable != null ?
-                geneticCodeTable.getTableNumber() :
-                GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL.getTableNumber();
+    public Integer getTranslTableNumber() {
+        return translTableNumber;
+    }
+
+    /**
+     * Get the genetic code string.
+     *
+     * @return The genetic code string
+     */
+    public String getGeneticCode() {
+        return geneticCode;
     }
 
     /**
@@ -62,6 +81,15 @@ public class TranslationOptions {
     }
 
     /**
+     * Check if internal stop codons should be represented as dashes.
+     *
+     * @return true if internal stop codons should be represented as dashes
+     */
+    public boolean isAllowInternalStopCodons() {
+        return allowInternalStopCodons;
+    }
+
+    /**
      * Create a builder for TranslationOptions.
      *
      * @return A new builder
@@ -71,24 +99,15 @@ public class TranslationOptions {
     }
 
     /**
-     * Check if internal stop codons should be represented as dashes.
-     *
-     * @return true if internal stop codons should be represented as dashes
-     */
-    public boolean isAllowInternalStopCodons() {
-        return allowInternalStopCodons;
-    }
-
-
-    /**
      * Builder for TranslationOptions.
      */
     public static class Builder {
-        private GeneticCodeTable geneticCodeTable = GeneticCodeTable.INVERTEBRATE_MITOCHONDRIAL;
+        private Integer translTableNumber;
+        private String geneticCode;
+        private GeneticCodeTable explicitCodeTable;
         private boolean includeStopCodon = false;
         private boolean translateCDS = true;
         private boolean allowInternalStopCodons = false;
-
 
         /**
          * Set whether internal stop codons should be represented as dashes.
@@ -102,39 +121,40 @@ public class TranslationOptions {
             return this;
         }
 
-
-
         /**
-         * Set the genetic code table to use for translation.
+         * Set the genetic code table explicitly.
+         * Note: translTableNumber and geneticCode take precedence if specified.
          *
          * @param geneticCodeTable The genetic code table
          * @return This builder
          */
         public Builder geneticCodeTable(GeneticCodeTable geneticCodeTable) {
-            this.geneticCodeTable = geneticCodeTable;
+            this.explicitCodeTable = geneticCodeTable;
             return this;
         }
 
         /**
          * Set the genetic code table by its NCBI table number.
+         * This has the highest precedence when determining which table to use.
          *
          * @param tableNumber The NCBI translation table number
          * @return This builder
          */
         public Builder translTableNumber(int tableNumber) {
-            this.geneticCodeTable = GeneticCodeTable.getByTableNumber(tableNumber);
+            this.translTableNumber = tableNumber;
             return this;
         }
 
         /**
          * Set the genetic code by name or number as a string.
          * This can be the enum name, description, or table number.
+         * translTableNumber takes precedence over this if both are specified.
          *
          * @param nameOrNumber The name or number of the genetic code table
          * @return This builder
          */
         public Builder geneticCode(String nameOrNumber) {
-            this.geneticCodeTable = GeneticCodeTable.getByNameOrNumber(nameOrNumber);
+            this.geneticCode = nameOrNumber;
             return this;
         }
 

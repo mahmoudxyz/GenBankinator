@@ -9,53 +9,62 @@ public class StringUtil {
     }
 
     /**
-     * Truncate a string to a maximum length.
+     * Truncates a string to a specified length.
      *
-     * @param text The string to truncate
-     * @param maxLength The maximum length
+     * @param str    The string to truncate
+     * @param length The desired length
      * @return The truncated string
      */
-    public static String truncate(String text, int maxLength) {
-        if (text == null || text.length() <= maxLength) {
-            return text;
+    public static String truncate(String str, int length) {
+        if (str == null) {
+            return null;
         }
-        return text.substring(0, maxLength);
+
+        if (str.length() <= length) {
+            return str;
+        }
+
+        return str.substring(0, length);
     }
 
     /**
-     * Pad a string with spaces to a fixed length, right-aligned.
+     * Pads a string on the right with spaces to a specified length.
      *
-     * @param text The string to pad
+     * @param str    The string to pad
      * @param length The desired length
      * @return The padded string
      */
-    public static String rightPad(String text, int length) {
-        if (text == null) {
-            text = "";
+    public static String rightPad(String str, int length) {
+        if (str == null) {
+            return repeat(" ", length);
         }
-        int padding = length - text.length();
-        if (padding <= 0) {
-            return text;
+
+        int padLength = length - str.length();
+        if (padLength <= 0) {
+            return str;
         }
-        return text + " ".repeat(padding);
+
+        return str + repeat(" ", padLength);
     }
 
     /**
-     * Pad a string with spaces to a fixed length, left-aligned.
+     * Pads a string on the left with spaces to a specified length.
      *
-     * @param text The string to pad
+     * @param str    The string to pad
      * @param length The desired length
      * @return The padded string
      */
-    public static String leftPad(String text, int length) {
-        if (text == null) {
-            text = "";
+    public static String leftPad(String str, int length) {
+        if (str == null) {
+            return repeat(" ", length);
         }
-        int padding = length - text.length();
-        if (padding <= 0) {
-            return text;
+
+        int padLength = length - str.length();
+        if (padLength <= 0) {
+            return str;
         }
-        return " ".repeat(padding) + text;
+
+        return repeat(" ", padLength) + str;
     }
 
     /**
@@ -79,16 +88,26 @@ public class StringUtil {
     }
 
     /**
-     * Repeat a string a specified number of times.
+     * Repeats a string a specified number of times.
      *
-     * @param text The string to repeat
-     * @param count The number of times to repeat
+     * @param str   The string to repeat
+     * @param times The number of times to repeat
      * @return The repeated string
      */
-    public static String repeat(String text, int count) {
-        if (text == null || count <= 0) {
+    public static String repeat(String str, int times) {
+        if (str == null) {
+            return null;
+        }
+
+        if (times <= 0) {
             return "";
         }
-        return text.repeat(count);
+
+        StringBuilder result = new StringBuilder(str.length() * times);
+        for (int i = 0; i < times; i++) {
+            result.append(str);
+        }
+
+        return result.toString();
     }
 }

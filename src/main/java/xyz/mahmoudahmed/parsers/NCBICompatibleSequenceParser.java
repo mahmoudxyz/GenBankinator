@@ -1,10 +1,9 @@
 package xyz.mahmoudahmed.parsers;
 
-import xyz.mahmoudahmed.api.SequenceParser;
 import xyz.mahmoudahmed.exception.InvalidFileFormatException;
 import xyz.mahmoudahmed.model.Sequence;
 import xyz.mahmoudahmed.model.SequenceData;
-import xyz.mahmoudahmed.util.FileUtil;
+import xyz.mahmoudahmed.util.BioFileUtils;
 import xyz.mahmoudahmed.util.StringUtil;
 
 import java.io.*;
@@ -19,6 +18,7 @@ import java.util.regex.Pattern;
  */
 public class NCBICompatibleSequenceParser implements SequenceParser {
     private static final Pattern FASTA_HEADER_PATTERN = Pattern.compile(">(.*)");
+    BioFileUtils utils = BioFileUtils.create();
 
     @Override
     public boolean supportsFormat(String format) {
@@ -29,7 +29,8 @@ public class NCBICompatibleSequenceParser implements SequenceParser {
     @Override
     public SequenceData parse(File file) throws IOException {
         List<Sequence> sequences = new ArrayList<>();
-        String format = FileUtil.detectFileFormat(file);
+
+        String format = utils.detectFormat(file);
 
         if ("FASTA".equalsIgnoreCase(format)) {
             sequences = parseFasta(file);
@@ -58,7 +59,9 @@ public class NCBICompatibleSequenceParser implements SequenceParser {
     @Override
     public SequenceData parseMetadataOnly(File file) throws IOException {
         List<Sequence> sequences = new ArrayList<>();
-        String format = FileUtil.detectFileFormat(file);
+
+        String format = utils.detectFormat(file);
+
 
         if ("FASTA".equalsIgnoreCase(format)) {
             sequences = parseFastaMetadataOnly(file);

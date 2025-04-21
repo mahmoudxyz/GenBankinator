@@ -95,7 +95,6 @@ public class ProteinCodingFeatureHandler extends AbstractFeatureHandler {
     public Map<String, List<String>> buildQualifiers(FastaHeaderInfo header, String sequence, Translator translator) {
         Map<String, List<String>> qualifiers = super.buildQualifiers(header, sequence, translator);
 
-        System.out.println();
         // Add standard protein coding qualifiers
         qualifiers.put("codon_start", Collections.singletonList("1"));
         qualifiers.put("transl_table", Collections.singletonList("5")); // Could be parameterized

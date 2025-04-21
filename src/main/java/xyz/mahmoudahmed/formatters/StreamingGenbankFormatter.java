@@ -1,4 +1,4 @@
-package xyz.mahmoudahmed.core;
+package xyz.mahmoudahmed.formatters;
 
 import xyz.mahmoudahmed.model.*;
 import xyz.mahmoudahmed.util.SequenceStreamProvider;

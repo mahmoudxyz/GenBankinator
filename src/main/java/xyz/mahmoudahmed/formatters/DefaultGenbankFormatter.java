@@ -1,6 +1,5 @@
-package xyz.mahmoudahmed.core;
+package xyz.mahmoudahmed.formatters;
 
-import xyz.mahmoudahmed.api.GenbankFormatter;
 import xyz.mahmoudahmed.exception.ConversionException;
 import xyz.mahmoudahmed.model.*;
 import xyz.mahmoudahmed.util.StringUtil;
@@ -512,6 +511,8 @@ public class DefaultGenbankFormatter implements GenbankFormatter {
             if ("ID".equals(key) || "Name".equals(key)) {
                 continue;
             }
+
+
 
             for (String value : values) {
                 if (value == null || value.isEmpty()) {

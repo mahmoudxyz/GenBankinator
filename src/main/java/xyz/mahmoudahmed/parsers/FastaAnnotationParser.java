@@ -1,6 +1,5 @@
 package xyz.mahmoudahmed.parsers;
 
-import xyz.mahmoudahmed.api.AnnotationParser;
 import xyz.mahmoudahmed.model.Annotation;
 import xyz.mahmoudahmed.model.AnnotationData;
 import xyz.mahmoudahmed.exception.ParsingException;
@@ -204,7 +203,8 @@ public class FastaAnnotationParser implements AnnotationParser {
                 conversionOptions.getTranslationOptions() != null) {
 
             return TranslatorFactory.createTranslator(
-                    conversionOptions.getTranslationOptions().getGeneticCodeTable());
+                    conversionOptions.getTranslationOptions().getGeneticCodeTable(),
+                    conversionOptions.getTranslationOptions());
         } else {
             // Default to Invertebrate Mitochondrial for backward compatibility
             return TranslatorFactory.createInvertebrateMitochondrialTranslator();

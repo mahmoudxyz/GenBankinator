@@ -1,11 +1,19 @@
-package xyz.mahmoudahmed.core;
+package xyz.mahmoudahmed.converter;
 
-import xyz.mahmoudahmed.api.*;
+import xyz.mahmoudahmed.config.FormatConfiguration;
+import xyz.mahmoudahmed.formatters.StreamingGenbankFormatter;
 import xyz.mahmoudahmed.exception.ValidationException;
+import xyz.mahmoudahmed.factory.FormatDetectorFactory;
+import xyz.mahmoudahmed.format.FormatDetector;
+import xyz.mahmoudahmed.formatters.DefaultGenbankFormatter;
+import xyz.mahmoudahmed.formatters.GenbankFormatter;
 import xyz.mahmoudahmed.model.*;
-import xyz.mahmoudahmed.parsers.FastaAnnotationParser;
+import xyz.mahmoudahmed.parsers.*;
+import xyz.mahmoudahmed.service.FormatDetectionService;
 import xyz.mahmoudahmed.util.FileSequenceStreamProvider;
 import xyz.mahmoudahmed.util.SequenceStreamProvider;
+import xyz.mahmoudahmed.validators.DefaultGenbankValidator;
+import xyz.mahmoudahmed.validators.GenbankValidator;
 
 import java.io.*;
 import java.time.LocalDateTime;
@@ -93,7 +101,6 @@ public class DefaultGenbankConverter implements GenbankConverter {
         SequenceData sequenceData = sequenceParser.parse(sequenceFile);
         AnnotationData annotationData = annotationParser.parse(annotationFile);
 
-        System.out.println();
         // Handle sequence merging if needed
         if (options.isMergeSequences() && sequenceData.getCount() > 1) {
             sequenceData = mergeSequences(sequenceData, options);
@@ -237,6 +244,7 @@ public class DefaultGenbankConverter implements GenbankConverter {
         private GenbankValidator validator;
         private GenbankFormatter formatter;
         private GenbankOptions options;
+        private FormatDetectionService formatDetectionService;
 
         @Override
         public GenbankConverterBuilder withSequenceParser(SequenceParser parser) {
@@ -268,6 +276,17 @@ public class DefaultGenbankConverter implements GenbankConverter {
             return this;
         }
 
+        /**
+         * Set the format detection service for the converter.
+         *
+         * @param formatDetectionService The format detection service to use
+         * @return This builder
+         */
+        public GenbankConverterBuilder withFormatDetectionService(FormatDetectionService formatDetectionService) {
+            this.formatDetectionService = formatDetectionService;
+            return this;
+        }
+
         @Override
         public GenbankConverter build() {
             // Use defaults if not specified
@@ -279,8 +298,21 @@ public class DefaultGenbankConverter implements GenbankConverter {
                 annotationParser = new DefaultAnnotationParser();
             }
 
+            // Create a default format detection service if not provided
+            if (formatDetectionService == null) {
+                FormatConfiguration config = new FormatConfiguration();
+                FormatDetectorFactory factory = new FormatDetectorFactory(config);
+                List<FormatDetector> detectors = factory.createDetectors();
+                formatDetectionService = new FormatDetectionService(detectors);
+            }
+
             if (validator == null) {
-                validator = new DefaultGenbankValidator();
+                // Use new constructor that takes FormatDetectionService
+                validator = new DefaultGenbankValidator(
+                        List.of(sequenceParser),
+                        List.of(annotationParser),
+                        formatDetectionService
+                );
             }
 
             if (formatter == null) {

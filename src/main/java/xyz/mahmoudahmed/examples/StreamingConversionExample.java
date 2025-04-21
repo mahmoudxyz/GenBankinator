@@ -1,11 +1,11 @@
 package xyz.mahmoudahmed.examples;
 
 
-import xyz.mahmoudahmed.api.AnnotationParser;
-import xyz.mahmoudahmed.api.GenbankConverter;
-import xyz.mahmoudahmed.api.SequenceParser;
-import xyz.mahmoudahmed.core.DefaultAnnotationParser;
-import xyz.mahmoudahmed.core.DefaultSequenceParser;
+import xyz.mahmoudahmed.parsers.AnnotationParser;
+import xyz.mahmoudahmed.converter.GenbankConverter;
+import xyz.mahmoudahmed.parsers.SequenceParser;
+import xyz.mahmoudahmed.parsers.DefaultAnnotationParser;
+import xyz.mahmoudahmed.parsers.DefaultSequenceParser;
 import xyz.mahmoudahmed.model.*;
 
 import java.io.File;

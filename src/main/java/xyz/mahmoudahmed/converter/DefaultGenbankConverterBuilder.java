@@ -1,8 +1,11 @@
-package xyz.mahmoudahmed.core;
+package xyz.mahmoudahmed.converter;
 
 
-import xyz.mahmoudahmed.api.*;
+import xyz.mahmoudahmed.formatters.GenbankFormatter;
 import xyz.mahmoudahmed.model.GenbankOptions;
+import xyz.mahmoudahmed.parsers.AnnotationParser;
+import xyz.mahmoudahmed.parsers.SequenceParser;
+import xyz.mahmoudahmed.validators.GenbankValidator;
 
 /**
  * Default implementation of GenbankConverterBuilder.

@@ -1,10 +1,8 @@
-package xyz.mahmoudahmed.api;
+package xyz.mahmoudahmed.converter;
 
-import xyz.mahmoudahmed.core.DefaultGenbankConverterBuilder;
 import xyz.mahmoudahmed.model.*;
 
 import java.io.File;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 

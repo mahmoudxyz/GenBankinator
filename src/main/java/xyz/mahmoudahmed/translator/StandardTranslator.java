@@ -45,6 +45,12 @@ public class StandardTranslator implements Translator {
 
     @Override
     public String translate(String sequence, boolean isRNA) {
+        // Get translation options
+        boolean includeStopCodon = false;
+        if (options != null) {
+            includeStopCodon = options.isIncludeStopCodon();
+        }
+
         // Validate and prepare the sequence
         String validatedSequence = sequenceHandler.validateSequence(sequence);
         String rnaSequence = isRNA ? validatedSequence : sequenceHandler.toRNA(validatedSequence);
@@ -61,23 +67,12 @@ public class StandardTranslator implements Translator {
                     (options != null && options.isAllowInternalStopCodons());
         }
 
-        // Find the last non-stop codon
-        int lastNonStopCodonIndex = -1;
-        for (int i = codons.size() - 1; i >= 0; i--) {
-            String codon = codons.get(i);
-            if (codon.length() == 3 && !geneticCode.isStopCodon(codon)) {
-                lastNonStopCodonIndex = i;
-                break;
-            }
-        }
-
         // Translate
         StringBuilder protein = new StringBuilder();
         boolean isFirstCodon = true;
+        boolean foundStopCodon = false;
 
-        for (int i = 0; i <= lastNonStopCodonIndex; i++) {
-            // Only translate up to the last non-stop codon
-            // This handles the case where there might be multiple stop codons at the end
+        for (int i = 0; i < codons.size(); i++) {
             String codon = codons.get(i);
             if (codon.length() == 3) {
                 char aminoAcid;
@@ -89,13 +84,22 @@ public class StandardTranslator implements Translator {
                     aminoAcid = geneticCode.translate(codon);
                 }
 
-                // Handle stop codons (any stop codons here must be internal)
+                // Handle stop codons
                 if (aminoAcid == '*') {
-                    if (allowInternalStopCodons) {
-                        // For marine mitochondrial genomes or when allowed: replace with dash
+                    foundStopCodon = true;
+
+                    // Check if this is the last codon in the sequence
+                    boolean isTerminalStopCodon = (i == codons.size() - 1);
+
+                    if (isTerminalStopCodon && includeStopCodon) {
+                        // This is the final stop codon and we want to include it
+                        protein.append('-');
+                    } else if (!isTerminalStopCodon && allowInternalStopCodons) {
+                        // This is an internal stop codon and we're allowing them
                         protein.append('-');
                     } else {
-                        // Standard NCBI behavior: stop at first stop codon
+                        // Either this is an internal stop codon we don't allow,
+                        // or it's a terminal stop codon we don't want to include
                         break;
                     }
                 } else {
@@ -106,8 +110,15 @@ public class StandardTranslator implements Translator {
             }
         }
 
+        // If we're including stop codons but didn't find one, and there's room for one more codon
+        if (includeStopCodon && !foundStopCodon && rnaSequence.length() % 3 == 0) {
+            // Add a stop codon symbol at the end
+            protein.append('-');
+        }
+
         return protein.toString();
     }
+
 
     @Override
     public List<String> findOpenReadingFrames(String sequence, boolean isRNA) {

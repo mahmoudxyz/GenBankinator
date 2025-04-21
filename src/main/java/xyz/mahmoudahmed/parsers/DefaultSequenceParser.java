@@ -1,10 +1,10 @@
-package xyz.mahmoudahmed.core;
+package xyz.mahmoudahmed.parsers;
 
-import xyz.mahmoudahmed.api.SequenceParser;
+import xyz.mahmoudahmed.exception.FileProcessingException;
 import xyz.mahmoudahmed.exception.InvalidFileFormatException;
 import xyz.mahmoudahmed.model.Sequence;
 import xyz.mahmoudahmed.model.SequenceData;
-import xyz.mahmoudahmed.util.FileUtil;
+import xyz.mahmoudahmed.service.FormatDetectionService;
 import xyz.mahmoudahmed.util.StringUtil;
 
 import java.io.*;
@@ -19,6 +19,33 @@ import java.util.regex.Pattern;
 public class DefaultSequenceParser implements SequenceParser {
     private static final Pattern FASTA_HEADER_PATTERN = Pattern.compile(">(.*)");
 
+    private FormatDetectionService formatDetectionService;
+
+    /**
+     * Default constructor
+     */
+    public DefaultSequenceParser() {
+        // Default constructor with no format detection service
+    }
+
+    /**
+     * Constructor with format detection service
+     *
+     * @param formatDetectionService The format detection service to use
+     */
+    public DefaultSequenceParser(FormatDetectionService formatDetectionService) {
+        this.formatDetectionService = formatDetectionService;
+    }
+
+    /**
+     * Set the format detection service
+     *
+     * @param formatDetectionService The format detection service to use
+     */
+    public void setFormatDetectionService(FormatDetectionService formatDetectionService) {
+        this.formatDetectionService = formatDetectionService;
+    }
+
     @Override
     public boolean supportsFormat(String format) {
         return "FASTA".equalsIgnoreCase(format) || "FA".equalsIgnoreCase(format) ||
@@ -28,17 +55,71 @@ public class DefaultSequenceParser implements SequenceParser {
     @Override
     public SequenceData parse(File file) throws IOException {
         List<Sequence> sequences = new ArrayList<>();
-        String format = FileUtil.detectFileFormat(file);
 
-        if ("FASTA".equalsIgnoreCase(format)) {
+        // Check file extension first - if it's a recognized FASTA extension, accept it even if empty
+        String fileName = file.getName().toLowerCase();
+        if (fileName.endsWith(".fasta") || fileName.endsWith(".fa") ||
+                fileName.endsWith(".fna") || fileName.endsWith(".faa")) {
+
+            // File has FASTA extension - parse as FASTA
             sequences = parseFasta(file);
+
         } else {
-            throw new InvalidFileFormatException("Unsupported format: " + format, format);
+            // For non-FASTA extensions, rely on format detection
+            String format;
+
+            try {
+                // Use format detection service if available
+                if (formatDetectionService != null) {
+                    format = formatDetectionService.detectFormat(file);
+                } else {
+                    // Fall back to extension-based detection
+                    format = detectFormatByExtension(file);
+                }
+
+                if ("FASTA".equalsIgnoreCase(format)) {
+                    sequences = parseFasta(file);
+                } else {
+                    throw new InvalidFileFormatException("Unsupported format: " + format, format);
+                }
+            } catch (FileProcessingException e) {
+                throw new IOException("Error detecting file format: " + e.getMessage(), e);
+            }
         }
 
         return SequenceData.builder()
                 .addSequences(sequences)
                 .build();
+    }
+
+    /**
+     * Detect format by file extension.
+     * This is a fallback method when no format detection service is available
+     */
+    private String detectFormatByExtension(File file) {
+        String name = file.getName().toLowerCase();
+        if (name.endsWith(".fa") || name.endsWith(".fasta") ||
+                name.endsWith(".fna") || name.endsWith(".faa")) {
+            return "FASTA";
+        }
+
+        // Try to detect by checking first few lines
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                if (line.startsWith(">")) {
+                    return "FASTA";
+                }
+                break;
+            }
+        } catch (IOException e) {
+            // Fall back to unknown on error
+        }
+
+        return "UNKNOWN";
     }
 
     @Override
@@ -57,12 +138,36 @@ public class DefaultSequenceParser implements SequenceParser {
     @Override
     public SequenceData parseMetadataOnly(File file) throws IOException {
         List<Sequence> sequences = new ArrayList<>();
-        String format = FileUtil.detectFileFormat(file);
 
-        if ("FASTA".equalsIgnoreCase(format)) {
+        // Check file extension first, similar to parse method
+        String fileName = file.getName().toLowerCase();
+        if (fileName.endsWith(".fasta") || fileName.endsWith(".fa") ||
+                fileName.endsWith(".fna") || fileName.endsWith(".faa")) {
+
+            // File has FASTA extension - parse metadata only as FASTA
             sequences = parseFastaMetadataOnly(file);
+
         } else {
-            throw new InvalidFileFormatException("Unsupported format: " + format, format);
+            // For non-FASTA extensions, rely on format detection
+            String format;
+
+            try {
+                // Use format detection service if available
+                if (formatDetectionService != null) {
+                    format = formatDetectionService.detectFormat(file);
+                } else {
+                    // Fall back to extension-based detection
+                    format = detectFormatByExtension(file);
+                }
+
+                if ("FASTA".equalsIgnoreCase(format)) {
+                    sequences = parseFastaMetadataOnly(file);
+                } else {
+                    throw new InvalidFileFormatException("Unsupported format: " + format, format);
+                }
+            } catch (FileProcessingException e) {
+                throw new IOException("Error detecting file format: " + e.getMessage(), e);
+            }
         }
 
         return SequenceData.builder()

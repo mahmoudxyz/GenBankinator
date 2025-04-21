@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>xyz.mahmoudahmed</groupId>
-    <artifactId>genbankconverter</artifactId>
+    <artifactId>genbankinator</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <dependencies>

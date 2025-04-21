@@ -1,4 +1,4 @@
-package xyz.mahmoudahmed.api;
+package xyz.mahmoudahmed.validators;
 
 
 import xyz.mahmoudahmed.model.ValidationResult;

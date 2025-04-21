@@ -11,7 +11,6 @@ public class DefaultFeatureHandler extends AbstractFeatureHandler {
 
     @Override
     public boolean canHandle(String featureName) {
-        // This is the fallback handler - it handles anything
         return true;
     }
 }

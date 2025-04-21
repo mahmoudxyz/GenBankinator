@@ -30,7 +30,6 @@ public abstract class AbstractFeatureHandler implements FeatureHandler {
         }
         // By default, create a gene feature for this feature
         if (!feature.getType().equals("gene")) {
-            System.out.println();
             Annotation geneFeature = createGeneFeature(feature);
             return Collections.singletonList(geneFeature);
         }

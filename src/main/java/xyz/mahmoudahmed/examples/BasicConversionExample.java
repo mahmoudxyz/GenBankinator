@@ -1,6 +1,6 @@
 package xyz.mahmoudahmed.examples;
 
-import xyz.mahmoudahmed.api.GenbankConverter;
+import xyz.mahmoudahmed.converter.GenbankConverter;
 import xyz.mahmoudahmed.model.*;
 import xyz.mahmoudahmed.parsers.FastaAnnotationParser;
 import xyz.mahmoudahmed.parsers.NCBICompatibleSequenceParser;

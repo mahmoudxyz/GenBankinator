@@ -1,6 +1,6 @@
 package xyz.mahmoudahmed.examples;
 
-import xyz.mahmoudahmed.api.GenbankConverter;
+import xyz.mahmoudahmed.converter.GenbankConverter;
 import xyz.mahmoudahmed.model.ConversionOptions;
 import xyz.mahmoudahmed.model.GenbankResult;
 import xyz.mahmoudahmed.model.ValidationIssue;

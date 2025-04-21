@@ -1,4 +1,4 @@
-package xyz.mahmoudahmed.api;
+package xyz.mahmoudahmed.parsers;
 
 import xyz.mahmoudahmed.model.SequenceData;
 

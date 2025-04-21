@@ -1,10 +1,10 @@
-package xyz.mahmoudahmed.core;
+package xyz.mahmoudahmed.parsers;
 
-import xyz.mahmoudahmed.api.AnnotationParser;
+import xyz.mahmoudahmed.exception.FileProcessingException;
 import xyz.mahmoudahmed.exception.InvalidFileFormatException;
 import xyz.mahmoudahmed.model.Annotation;
 import xyz.mahmoudahmed.model.AnnotationData;
-import xyz.mahmoudahmed.util.FileUtil;
+import xyz.mahmoudahmed.service.FormatDetectionService;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +22,33 @@ public class DefaultAnnotationParser implements AnnotationParser {
     private static final Pattern FASTA_HEADER_PATTERN = Pattern.compile(
             ">([^;]+);\\s*([0-9]+-[0-9]+);\\s*([+\\-]);\\s*([^\\(]+)(?:\\(([^\\)]+)\\))?.*");
 
+    private FormatDetectionService formatDetectionService;
+
+    /**
+     * Default constructor
+     */
+    public DefaultAnnotationParser() {
+        // Default constructor with no format detection service
+    }
+
+    /**
+     * Constructor with format detection service
+     *
+     * @param formatDetectionService The format detection service to use
+     */
+    public DefaultAnnotationParser(FormatDetectionService formatDetectionService) {
+        this.formatDetectionService = formatDetectionService;
+    }
+
+    /**
+     * Set the format detection service
+     *
+     * @param formatDetectionService The format detection service to use
+     */
+    public void setFormatDetectionService(FormatDetectionService formatDetectionService) {
+        this.formatDetectionService = formatDetectionService;
+    }
+
     @Override
     public boolean supportsFormat(String format) {
         return "GFF".equalsIgnoreCase(format) || "GTF".equalsIgnoreCase(format)
@@ -31,7 +58,19 @@ public class DefaultAnnotationParser implements AnnotationParser {
 
     @Override
     public AnnotationData parse(File file) throws IOException {
-        String format = FileUtil.detectFileFormat(file);
+        String format;
+
+        // Detect format using the format detection service if available
+        if (formatDetectionService != null) {
+            try {
+                format = formatDetectionService.detectFormat(file);
+            } catch (FileProcessingException e) {
+                throw new IOException("Error detecting file format: " + e.getMessage(), e);
+            }
+        } else {
+            // Fallback to detecting format by file extension
+            format = detectFormatByExtension(file);
+        }
 
         if ("GFF".equalsIgnoreCase(format) || "GFF3".equalsIgnoreCase(format)) {
             return parseGff(file);
@@ -43,6 +82,30 @@ public class DefaultAnnotationParser implements AnnotationParser {
             return parseFasta(file);
         } else {
             throw new InvalidFileFormatException("Unsupported annotation format: " + format, format);
+        }
+    }
+
+    /**
+     * Detect format by file extension
+     */
+    private String detectFormatByExtension(File file) {
+        String name = file.getName().toLowerCase();
+        if (name.endsWith(".gff") || name.endsWith(".gff3")) {
+            return "GFF";
+        } else if (name.endsWith(".gtf")) {
+            return "GTF";
+        } else if (name.endsWith(".bed")) {
+            return "BED";
+        } else if (name.endsWith(".fa") || name.endsWith(".fasta")) {
+            return "FASTA";
+        } else {
+            // Try to detect by content
+            try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
+                return detectFormatFromStream(reader);
+            } catch (IOException e) {
+                logger.log(Level.WARNING, "Error detecting format by content, defaulting to GFF", e);
+                return "GFF";
+            }
         }
     }
 
@@ -168,6 +231,8 @@ public class DefaultAnnotationParser implements AnnotationParser {
                         }
 
                         String featureId = gene != null ? gene : type + "-" + UUID.randomUUID().toString().substring(0, 8);
+                        // Add ID qualifier explicitly
+                        qualifiers.put("ID", Collections.singletonList(featureId));
 
                         Annotation annotation = Annotation.builder()
                                 .type(type)
@@ -280,16 +345,21 @@ public class DefaultAnnotationParser implements AnnotationParser {
                                 List<String> values = Arrays.asList(value.split(","));
                                 qualifiers.put(key, values);
                             } else {
-                                qualifiers.put(key, List.of(value));
+                                qualifiers.put(key, Collections.singletonList(value));
                             }
                         }
                     }
                 }
 
                 // Create feature ID if not present
-                String featureId = qualifiers.containsKey("ID")
-                        ? qualifiers.get("ID").get(0)
-                        : type + "-" + UUID.randomUUID().toString().substring(0, 8);
+                String featureId;
+                if (qualifiers.containsKey("ID")) {
+                    featureId = qualifiers.get("ID").get(0);
+                } else {
+                    featureId = type + "-" + UUID.randomUUID().toString().substring(0, 8);
+                    // Add the generated ID to qualifiers
+                    qualifiers.put("ID", Collections.singletonList(featureId));
+                }
 
                 // Create the annotation
                 Annotation annotation = Annotation.builder()
@@ -409,6 +479,9 @@ public class DefaultAnnotationParser implements AnnotationParser {
                     featureId = type + "-" + UUID.randomUUID().toString().substring(0, 8);
                 }
 
+                // Add ID qualifier explicitly
+                qualifiers.put("ID", Collections.singletonList(featureId));
+
                 // Create the annotation
                 Annotation annotation = Annotation.builder()
                         .type(type)
@@ -501,16 +574,14 @@ public class DefaultAnnotationParser implements AnnotationParser {
 
                 // Create qualifiers map
                 Map<String, List<String>> qualifiers = new HashMap<>();
-                qualifiers.put("ID", List.of(name + "-" + UUID.randomUUID().toString().substring(0, 8)));
-                qualifiers.put("Name", List.of(name));
+                String featureId = name + "-" + UUID.randomUUID().toString().substring(0, 8);
+                qualifiers.put("ID", Collections.singletonList(featureId));
+                qualifiers.put("Name", Collections.singletonList(name));
 
                 // Add score if available
                 if (fields.length > 4 && !fields[4].equals(".")) {
-                    qualifiers.put("score", List.of(fields[4]));
+                    qualifiers.put("score", Collections.singletonList(fields[4]));
                 }
-
-                // Generate unique feature ID
-                String featureId = name + "-" + UUID.randomUUID().toString().substring(0, 8);
 
                 // Create the annotation
                 Annotation annotation = Annotation.builder()
@@ -536,6 +607,4 @@ public class DefaultAnnotationParser implements AnnotationParser {
                 .addAnnotations(annotationsBySequence)
                 .build();
     }
-
-
 }
