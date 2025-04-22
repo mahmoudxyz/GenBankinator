@@ -177,42 +177,4 @@ class FormatDetectionServiceTest {
         assertNotNull(emptyService);
     }
 
-    // Let's add a debugging test that prints what's happening
-    @Test
-    void debuggingTest(@TempDir Path tempDir) throws IOException, FileProcessingException {
-        // Create test file
-        Path testFilePath = tempDir.resolve("debug.txt");
-        Files.writeString(testFilePath, "Debug content\n");
-        File testFile = testFilePath.toFile();
-
-        System.out.println("DEBUG: File exists? " + testFile.exists());
-        System.out.println("DEBUG: File path: " + testFile.getAbsolutePath());
-
-        // Create a real implementation for debugging
-        FormatDetector debugDetector = new FormatDetector() {
-            @Override
-            public boolean canDetect(File file) {
-                System.out.println("DEBUG: canDetect called with file: " + file.getAbsolutePath());
-                return true;
-            }
-
-            @Override
-            public String detectFormat(File file) throws FileProcessingException {
-                System.out.println("DEBUG: detectFormat called with file: " + file.getAbsolutePath());
-                return "DEBUG_FORMAT";
-            }
-        };
-
-        // Create service with real detector
-        FormatDetectionService debugService = new FormatDetectionService(Collections.singletonList(debugDetector));
-
-        // Execute test
-        String result = debugService.detectFormat(testFile);
-
-        // Print result
-        System.out.println("DEBUG: Result: " + result);
-
-        // Basic assertion to make test pass
-        assertEquals("DEBUG_FORMAT", result);
-    }
 }

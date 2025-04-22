@@ -251,26 +251,38 @@ public class DefaultGenbankFormatter implements GenbankFormatter {
             writeReferences(writer, headerInfo.getReferences());
         }
 
-        // Write COMMENT section if available
-        if (headerInfo != null && StringUtils.isNotBlank(headerInfo.getComment())) {
-            writeMultiline(writer, "COMMENT", headerInfo.getComment(), 12);
-            writer.newLine();
-        }
+        // Write a single COMMENT section if either comment or assembly data exists
+        if (headerInfo != null && (StringUtil.isNotBlank(headerInfo.getComment()) ||
+                (headerInfo.getAssemblyData() != null && !headerInfo.getAssemblyData().isEmpty()))) {
 
-        // Write assembly data if available
-        if (headerInfo != null && headerInfo.getAssemblyData() != null &&
-                !headerInfo.getAssemblyData().isEmpty()) {
-            writer.write("COMMENT     ##Assembly-Data-START##");
-            writer.newLine();
+            // If there's a general comment, write it first
+            if (StringUtil.isNotBlank(headerInfo.getComment())) {
+                writeMultiline(writer, "COMMENT", headerInfo.getComment(), 12);
 
-            for (Map.Entry<String, String> entry : headerInfo.getAssemblyData().entrySet()) {
-                writer.write("            " + StringUtil.rightPad(entry.getKey(), 20) +
-                        ":: " + entry.getValue());
+                // Add a separator line if we also have assembly data
+                if (headerInfo.getAssemblyData() != null && !headerInfo.getAssemblyData().isEmpty()) {
+                    writer.newLine();
+                }
+            } else {
+                // If no general comment but we have assembly data, start with COMMENT line
+                writer.write("COMMENT     ");
                 writer.newLine();
             }
 
-            writer.write("            ##Assembly-Data-END##");
-            writer.newLine();
+            // Write assembly data if available
+            if (headerInfo.getAssemblyData() != null && !headerInfo.getAssemblyData().isEmpty()) {
+                writer.write("            ##Assembly-Data-START##");
+                writer.newLine();
+
+                for (Map.Entry<String, String> entry : headerInfo.getAssemblyData().entrySet()) {
+                    writer.write("            " + StringUtil.rightPad(entry.getKey(), 20) +
+                            ":: " + entry.getValue());
+                    writer.newLine();
+                }
+
+                writer.write("            ##Assembly-Data-END##");
+                writer.newLine();
+            }
         }
     }
 
@@ -809,15 +821,6 @@ public class DefaultGenbankFormatter implements GenbankFormatter {
                 writer.write(indent + remainingContent.substring(i, end));
                 writer.newLine();
             }
-        }
-    }
-
-    /**
-     * Utility method for checking string blanks.
-     */
-    private static class StringUtils {
-        public static boolean isNotBlank(String str) {
-            return str != null && !str.trim().isEmpty();
         }
     }
 }

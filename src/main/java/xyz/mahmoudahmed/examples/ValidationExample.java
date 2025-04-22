@@ -19,8 +19,8 @@ public class ValidationExample {
             GenbankConverter converter = GenbankConverter.standard();
 
             // Files to validate
-            File sequenceFile = new File("path/to/sequences.fasta");
-            File annotationFile = new File("path/to/annotations.gff");
+            File sequenceFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/3.fasta");
+            File annotationFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/3_ann.fasta");
 
             // Validate the sequence file
             ValidationResult seqValidation = converter.validateSequence(sequenceFile);
@@ -75,7 +75,7 @@ public class ValidationExample {
                         .moleculeType("DNA")
                         .topology("linear")
                         .division("VRT")
-                        .annotationFormat("GFF")
+                        .annotationFormat("FASTA")
                         .build();
 
                 // Convert to GenBank format

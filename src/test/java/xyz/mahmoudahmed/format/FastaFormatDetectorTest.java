@@ -17,11 +17,10 @@ import static org.mockito.Mockito.*;
 class FastaFormatDetectorTest {
 
     private FastaFormatDetector detector;
-    private FormatConfiguration mockConfig;
 
     @BeforeEach
     void setUp() {
-        mockConfig = mock(FormatConfiguration.class);
+        FormatConfiguration mockConfig = mock(FormatConfiguration.class);
         detector = new FastaFormatDetector(mockConfig);
     }
 

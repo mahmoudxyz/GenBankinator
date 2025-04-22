@@ -218,7 +218,6 @@ public class TranslationIntegrationTest {
 
         // Verify translation with stop codon (should be "MS*")
         String translation = extractTranslation(genbank);
-        System.out.println();
         assertTrue(translation.endsWith("-"), "Translation should include stop codon");
     }
 

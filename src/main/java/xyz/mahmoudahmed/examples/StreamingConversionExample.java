@@ -27,14 +27,14 @@ public class StreamingConversionExample {
                     .moleculeType("DNA")
                     .topology("linear")
                     .division("VRT")
-                    .annotationFormat("GFF")
+                    .annotationFormat("FASTA")
                     .build();
 
             // Create an output stream
             try (FileOutputStream outputStream = new FileOutputStream("streaming_output.gb")) {
                 // Parse files first to get data
-                File sequenceFile = new File("path/to/very_large_sequences.fasta");
-                File annotationFile = new File("path/to/annotations.gff");
+                File sequenceFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/3.fasta");
+                File annotationFile = new File("src/main/java/xyz/mahmoudahmed/examples/str/3_ann.fasta");
 
                 // Before starting, validate the compatibility
                 ValidationResult validation = converter.validate(sequenceFile, annotationFile);

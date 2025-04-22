@@ -68,7 +68,7 @@ public class StandardTranslatorTest {
 
         // Test DNA translation
         String result = translator.translate(inputSequence, false);
-        assertEquals("MR", result); // Should stop at first stop codon
+        assertEquals("MR", result);
 
         // Verify methods were called correctly
         verify(mockSequenceHandler).validateSequence(inputSequence);
@@ -95,15 +95,15 @@ public class StandardTranslatorTest {
 
         // Test RNA translation
         String result = translator.translate(inputSequence, true);
-        assertEquals("MR", result); // Should stop at first stop codon
+        assertEquals("MR", result);
 
         // Verify methods were called correctly
         verify(mockSequenceHandler).validateSequence(inputSequence);
-        verify(mockSequenceHandler, never()).toRNA(anyString()); // Should not be called for RNA
+        verify(mockSequenceHandler, never()).toRNA(anyString());
         verify(mockSequenceHandler).splitIntoCodons(inputSequence);
         verify(mockGeneticCode).translateStartCodon("AUG");
         verify(mockGeneticCode).translate("CGA");
-        verify(mockGeneticCode, atLeastOnce()).translate("UAA"); // Called for UAA
+        verify(mockGeneticCode, atLeastOnce()).translate("UAA");
     }
 
     @Test
@@ -125,7 +125,7 @@ public class StandardTranslatorTest {
 
         // Test translation with internal stop codon when allowed
         String result = translatorWithInternalStops.translate(inputSequence, false);
-        assertEquals("MR-V", result); // Internal stop codon represented as '-'
+        assertEquals("MR-V", result);
     }
 
     @Test
@@ -147,7 +147,7 @@ public class StandardTranslatorTest {
 
         // Test translation with internal stop codon when not allowed
         String result = translator.translate(inputSequence, false);
-        assertEquals("MR", result); // Should stop at first stop codon
+        assertEquals("MR", result);
     }
 
     @Test
